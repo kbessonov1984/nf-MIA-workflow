@@ -9,13 +9,13 @@ Mutation Importance Assigner SARS-COV-2 analytical pipeline estimates mutation "
 2. Define OUT-Group represented by the remainder GISAID data randomly sampled with sample size equal to IN-Group. 
 3. Encode each sample group membership as either 1 or 0 depending on whether the sample is part of the IN or OUT Group (1 or 0, respectively). The group membership defines the response variable Y 
 3. The predictors (X) are defined as the IN-Group mutations/SNVs that are found at least in the 10% of the IN-Group samples. The mutation presence/absence encoded as 0 and 1 for each sample, respectively.
-4. Fit univariate logistic regression model for each mutation and extract the t-test statistic values corresponding to each beta coefficient (Tobs)
-5. Permute the Y variable (but not X) and re-fit the same logistic regression model on permuted data. We collect the t-test statistic values (Tpermut). 
+4. Fit univariate logistic regression model for each mutation and extract the beta coefficient t-test statistic values (Tobs). Alternatively, for multivariate context considering ALL IN-Group mutations in a single model, fit LASSO model and extract beta coefficient z-score statistics (Tobs). 
+5. Permute the Y variable (but not X) and re-fit the same regression model on permuted data. We collect the t-test statistic values (Tpermut). 
 6. After B number of permutations, we obtain an empirical distribution of the Tpermut values and calculate FWER adjusted p-values using the step-down maxT algorithm for each mutation. The adjusted p-values for the maxT procedure is discussed on p. 50 and 114 of Westfall & Young (1993) [1].
 
 # Install
 
-Install NextFlow pipeline manager natively (not as conda environment) by running `curl -s https://get.nextflow.io | bash` in the destination folder. A binary file `nextflow` will be created. In addition, install conda if the pipeline will run under conda environment (recommended).
+Install NextFlow pipeline manager natively (not as a conda environment) by running `curl -s https://get.nextflow.io | bash` in the destination folder. A binary file `nextflow` will be created. In addition, install conda if the pipeline will run under conda environment (recommended).
 
 # Requirements
 
