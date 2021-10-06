@@ -65,6 +65,11 @@ GISAIDmetadata[,"Submission date"]=as.Date(GISAIDmetadata[,"Submission date"])
 rownames(GISAIDmetadata)=GISAIDmetadata[,"Accession ID"]
 GISAIDmetadata_with_sequences = GISAIDmetadata[GISAIDmetadata[,"Accession ID"] %in% names(mutations_database),] #homogenize metadata with mutations_database
 
+#homogenize database with new metadata on PANGO Lineages
+cat("Homogenize Pango Lineages in the database and GISAID metadata ... \n")
+mutations_database=lapply(mutations_database, function(i,l){i$lineage=l[parent.frame()$i]; return(i)},l=
+                            GISAIDmetadata_with_sequences[names(mutations_database),"Pango lineage"])
+
 #filter by geographical location
 cat(QUERY_LOCATION,"\n");
 if( QUERY_LOCATION != "null" ){
@@ -269,7 +274,7 @@ write.table(is_lasso_summary_df, file=name_lasso_report_file,
 
 
 ## PLOTS ##
-GISAID_lineages_freq=table(GISAIDmetadata[names(mutations_database),"Pango lineage"],useNA="no")
+GISAID_lineages_freq=table(GISAIDmetadata[names(mutations_database_filtered),"Pango lineage"],useNA="no")
 GISAID_lineages_freq_perc = GISAID_lineages_freq/sum(GISAID_lineages_freq) #percentages of total GISAID dataset
 GISAID_lineages_freq_perc[GISAID_lineages_freq_perc>1]=1 #nomralization in case the counts are about totals
 
