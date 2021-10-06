@@ -1,6 +1,6 @@
 # MIA (Mutation Importance Assigner)
 
-Mutation Importance Assigner SARS-COV-2 analytical pipeline estimates mutation "importance" by estimating its association strength to the selected IN-group against the OUT-group samples represented by the GISAID database. The aim is to facilitate more effective and objective discrimination of SARS-COV-2 lineages using mutation sets under different data selection criteria (time, geography, PANGO lineage) in light of the highly dynamic everchanging SARS-COV-2 data landscape.
+Mutation Importance Assigner SARS-COV-2 analytical pipeline estimates mutation "importance" by estimating its association strength to the selected IN-group against the OUT-group GISAID database samples (https://www.gisaid.org/). The aim is to facilitate more effective and objective discrimination of SARS-COV-2 lineages using mutation sets under different data selection criteria (time, geography, PANGO lineage) in light of the highly dynamic everchanging SARS-COV-2 data landscape.
 
 
 # Algorithm

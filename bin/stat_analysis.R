@@ -280,7 +280,7 @@ plot(sort(table(GISAIDmetadata_with_sequences[,"Pango lineage"]),decreasing = T)
 dev.off()
 
 
-pdf(file="Top100_PANGO_LINEAGES_distribution_GISAID_percent_cummulative.pdf",height=4, width=12)
+pdf(file="Top100_PANGO_LINEAGES_distribution_GISAID_percent_cumulative.pdf",height=4, width=12)
 plot(sort(GISAID_lineages_freq_perc, decreasing = T)[1:100],
      main=paste("Top 100 PANGO Lineages distribution in the GISAID (",dim(GISAIDmetadata_with_sequences)[1]," samples)",sep=""),las=2,cex.axis=0.5,ylab="Percent total (%)",xlab="")
 dev.off()
