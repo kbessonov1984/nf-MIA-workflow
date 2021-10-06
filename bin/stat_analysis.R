@@ -320,7 +320,8 @@ for(mutation in ingroup_mutations){
   pdf(file=paste("INGROUP-MUTATIONS-INFO-PLOTS/INGROUP_mutation_",mutation,"_freq_lineages.pdf",sep=""),
       height=4, width=20)
    shared_lineages_counts = sort(mutation_freq[[mutation]]/GISAID_lineages_freq[names(mutation_freq[[mutation]])],decreasing = T)
-   plot(sort(shared_lineages_counts, decreasing = T)[1:100],
+   if(length(shared_lineages_counts)>100){shared_lineages_counts=shared_lineages_counts[1:100]}
+   plot(shared_lineages_counts,
        main=paste("IN-group mutation ",mutation," frequency found in the top 100 PANGO lineages across the entire GISAID (",
                   length(mutations_database),")", sep=""),
        las=2,cex.axis=0.5, cex.main=1, ylab="% of lineage samples",xlab="")
