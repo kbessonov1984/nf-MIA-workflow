@@ -107,7 +107,7 @@ process GetVCFSample{
 
 process GenerateSample2MutationsDBparts{
     echo false
-    maxRetries 3
+    maxRetries 2
     
     publishDir "${params.outdir}/mutations_db_parts",
     pattern: "*.json",
@@ -130,15 +130,12 @@ process GenerateSample2MutationsDBparts{
 process GenerateSample2MutationsDBaggregate{
     echo false
     
-    publishDir "${params.outdir}",
-    mode: 'copy'
-    
     input:
     val vcf_path_batch_files
     val previous_mutations_database
     
     output:
-    path "*.json", emit: json_database_file
+    path "*.json", emit: json_database_raw_file
 
     
     script:
@@ -148,6 +145,25 @@ process GenerateSample2MutationsDBaggregate{
     """
 }
 
+process GenerateSample2MutationsDBlineagesUpdate{
+    echo false
+    
+    publishDir "${params.outdir}",
+    mode: 'copy'
+    
+    input:
+    val GISAIDMetaDataFile
+    val mutations_database
+    
+    output:
+    path "*.json", emit: json_database_file
+
+    
+    script:
+    """
+    ${baseDir}/bin/mutations_db_homogenize.R ${GISAIDMetaDataFile} ${mutations_database}
+    """
+}
 
 process GenerateVCFBatchLists{
     echo false
@@ -216,6 +232,7 @@ workflow {
    //GenerateVCFBatchLists(channel.fromPath("results/vcf_files/*.vcf").take(1000).toList()) // TEST CODE
    GenerateSample2MutationsDBparts(GenerateVCFBatchLists.out.vcf_file_path_batches.flatMap(),"${params.GISAIDMetaDataFile}")
    GenerateSample2MutationsDBaggregate(GenerateSample2MutationsDBparts.out.json_database_parts.collect(), "${params.GISAIDdatabase}")
+   GenerateSample2MutationsDBlineagesUpdate("${params.GISAIDMetaDataFile}", GenerateSample2MutationsDBaggregate.out.json_database_raw_file)
    }
    
    if (params.analysis && params.GISAIDdatabase){
@@ -223,6 +240,10 @@ workflow {
      PerformAnalysisGenerateReport("${params.GISAIDMetaDataFile}", "${params.GISAIDdatabase}", 
        "$params.in_group_lineage", "$params.n_permutations", "$params.location_string", "$params.start_date", "$params.end_date")
        
+   }
+   
+   if ( params.dbupdate_create == null &&  params.analysis == null ){
+     log.error """MIssing parameter(s). Specify either --dbupdate_create, --analysis or both"""  
    }
    
 }

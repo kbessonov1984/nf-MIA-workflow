@@ -40,6 +40,8 @@ GISAIDmetadata=read.csv2(file=GISAIDmetadatafilein, check.names = F, sep="\t", a
 headers_fasta=paste(GISAIDmetadata[,"Virus name"],"|",GISAIDmetadata[,"Accession ID"],sep="")
 #accessions=unlist(str_extract_all(headers_fasta[1:10],"EPI_\\w+_\\d+"))
 
+#If database is provided, only missing samples will be analyzed for DB update
+#Otherwise ALL samples will be used in analysis
 if(is.na(mutations_database_path) == FALSE){
     cat("Identifying missing accession numbers from the current mutations database\n")
     mutations_database=jsonlite::fromJSON(mutations_database_path)

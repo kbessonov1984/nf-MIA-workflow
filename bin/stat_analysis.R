@@ -3,14 +3,17 @@
 library(stringr)
 library(jsonlite)
 if(require("islasso", quietly = TRUE, warn.conflicts = F)==FALSE){
-  install.packages("islasso",repos='http://cran.us.r-project.org')
-  library("islasso")
+  install.packages("islasso",repos='https://cloud.r-project.org/')
+  
 }
 
 if(require("corrplot", quietly = TRUE, warn.conflicts = F)==FALSE){
-  install.packages("corrplot",repos='http://cran.us.r-project.org')
-  library("corrplot")
+  install.packages("corrplot",repos='https://cloud.r-project.org/')
 }
+
+library("islasso")
+library("corrplot")
+
 
 obtainLASSO_padjust_maxT_values <- function(data2fit, is_lasso_summary_df, NPERMUTATIONS){
   #mix original dataframe
@@ -64,11 +67,12 @@ GISAIDmetadata=read.csv2(file=GISAIDmetadatafilein, check.names = F, sep="\t", a
 GISAIDmetadata[,"Submission date"]=as.Date(GISAIDmetadata[,"Submission date"])
 rownames(GISAIDmetadata)=GISAIDmetadata[,"Accession ID"]
 GISAIDmetadata_with_sequences = GISAIDmetadata[GISAIDmetadata[,"Accession ID"] %in% names(mutations_database),] #homogenize metadata with mutations_database
-
-#homogenize database with new metadata on PANGO Lineages
-cat("Homogenize Pango Lineages in the database and GISAID metadata ... \n")
-mutations_database=lapply(mutations_database, function(i,l){i$lineage=l[parent.frame()$i]; return(i)},l=
-                            GISAIDmetadata_with_sequences[names(mutations_database),"Pango lineage"])
+cat("GISAID metadata unfiltered ",dim(GISAIDmetadata),"\n")
+cat("GISAID metadata filtered with mutations database ",dim(GISAIDmetadata_with_sequences),"\n")
+#(Optionally) Homogenize database with new metadata on PANGO Lineages
+#cat("Homogenize Pango Lineages in the database and GISAID metadata ... \n")
+#mutations_database=lapply(mutations_database, function(i,l){i$lineage=l[parent.frame()$i]; return(i)},l=
+#                            GISAIDmetadata_with_sequences[names(mutations_database),"Pango lineage"])
 
 #filter by geographical location
 cat(QUERY_LOCATION,"\n");
@@ -102,19 +106,21 @@ out_group_accessions = names(mutations_database_filtered[idx_not_na])[unlist(lap
 #sample 10% of the IN-GROUP if its size is > 10K of samples
 n_samples=length(in_group_accessions)
 if(n_samples == 0){stop("No samples were found for the following run paramenters. Relax parameters or update database?")}
-if(n_samples > 10000){n_samples=round(n_samples*0.10);cat("Total chunks to run",round(n_samples/(n_samples*0.10))," with each chunk",n_samples,"\n")}
+if(round(n_samples,-3) > 10000){n_samples=round(n_samples*0.10);cat("Total chunks to run",round(n_samples/(n_samples*0.10))," with each chunk",n_samples,"\n")}
 
 # SAMPLE STRATEGY 1: Random subsampling of the IN-GROUP and OUT-GROUP
 in_group_accessions_subset  = sample(in_group_accessions,n_samples)
 out_group_accessions_subset = sample(out_group_accessions,n_samples) #random sampling
-cat("Subset in-group samples",length(in_group_accessions_subset),"\n")
+cat("Number of in-group subset samples",length(in_group_accessions_subset),"\n")
 
 #common mutations in the in-group found at least in 10% of the samples
 ingroup_mutations=unlist(sapply(mutations_database_filtered[in_group_accessions_subset],
                                 function(sample_id){sample_id[["mutations"]]}))
 
-ingroup_mutations_freq = table(ingroup_mutations) 
+ingroup_mutations_freq = table(ingroup_mutations)
+ingroup_mutations_freq = ingroup_mutations_freq[!is.na(ingroup_mutations_freq)] #filter any mutations with NA values
 ingroup_mutations_freq_select = ingroup_mutations_freq[ingroup_mutations_freq  > round(length(in_group_accessions_subset)*0.1)]
+print(ingroup_mutations_freq_select)
 ingroup_mutations = names(ingroup_mutations_freq_select)
 cat("Ingroup mutations",length(ingroup_mutations),"\n")
 
@@ -134,7 +140,7 @@ data2fit_colnames=colnames(data2fit)
 
 loop_counter=1
 for(sample_accession in mutations_database_filtered[c(in_group_accessions_subset,out_group_accessions_subset)]){
-  mutations_selected_idx = which(data2fit_colnames %in% sample_accession$mutations)
+  mutations_selected_idx = which(data2fit_colnames %in% sample_accession$mutations) #NA values will be skipped
   data2fit[loop_counter,mutations_selected_idx] = 1
   loop_counter=loop_counter+1
 }
@@ -149,6 +155,7 @@ for (mutation in colnames(data2fit)[-1]){
   r_adj_model_values=c(r_adj_model_values, summary(lmfit)[["adj.r.squared"]])
   single_mutation_stats_df=rbind(single_mutation_stats_df, summary_df)
 }
+
 single_mutation_stats_df$`r_adj_model_values`=r_adj_model_values
 single_mutation_stats_df = single_mutation_stats_df[sort(single_mutation_stats_df[,"z value"],decreasing = T,index.return=T)$ix,]
 single_mutation_stats_df[sort(single_mutation_stats_df[,"z value"],decreasing = T,index.return=T)$ix,]
@@ -158,13 +165,15 @@ single_mutation_stats_df[sort(single_mutation_stats_df[,"z value"],decreasing = 
 
 ##PERMUTATION VALUES
 permut_T_matrix=matrix(0,ncol=NPERMUTATIONS,nrow=length(colnames(data2fit)[-1]))
+cat("Permutation matrix dimensions:",dim(permut_T_matrix),"\n")
 rownames(permut_T_matrix)=colnames(data2fit)[-1]
 for(p in 1:NPERMUTATIONS){
   cat("Permutation #",p,"\n")  
   data2fit_permut=data2fit
   data2fit_permut[,"Group"]=sample(data2fit[,"Group"],length(data2fit[,"Group"]))
-  for (mutation in colnames(data2fit_permut)[-1]){
-    lmfit = glm(Group~0+.,data=as.data.frame(data2fit_permut[,c("Group",mutation)]),family=binomial(link = "logit"))
+  for(mutation in colnames(data2fit_permut)[-1]){
+    lmfit = glm(Group~0+.,data=as.data.frame(data2fit_permut[,c("Group",mutation)]),
+                family=binomial(link = "logit"))
     permut_T_matrix[mutation,p]= summary(lmfit)$coefficients[,"z value"]
   }
 }
@@ -291,7 +300,11 @@ plot(sort(GISAID_lineages_freq_perc, decreasing = T)[1:100],
 dev.off()
 
 pdf(file="Top100_OUT_group_lineages_distribution.pdf",width=12,height = 5)
-plot(sort(table(GISAIDmetadata[out_group_accessions_subset,"Pango lineage"]),decreasing = T)[1:100],
+OUT_GROUP_Lineages_Distr = sort(table(GISAIDmetadata[out_group_accessions_subset,"Pango lineage"]),decreasing = T)
+if(length(OUT_GROUP_Lineages_Distr) > 100){
+  OUT_GROUP_Lineages_Distr=OUT_GROUP_Lineages_Distr[1:100]
+}
+plot(OUT_GROUP_Lineages_Distr,
      main=paste("Top 100 PANGO lineages distribution in the OUT-group subset based on ",
                 length(out_group_accessions_subset)," samples\n",sep=""),las=2,cex.axis=0.5,ylab="Frequency" )
 dev.off()
@@ -314,6 +327,7 @@ for(mutation in ingroup_mutations){
     #cat(m,parent.frame()$i,"\n")
     if(m %in% item$mutations){return(item$lineage)}
   },m=mutation)))
+  
   
   cat(names(mutation_freq[mutation]),"\n")
   

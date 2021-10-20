@@ -78,6 +78,7 @@ for (filepath in vcf_files_list){
 
 cat("Numeber of accessions added to the database ",length(names(mutations_database)),"\n")
 ## TODO need database on mutation effects for results mapping in future (e.g. A12162G mutation effect and ORF)
+
 db_json_name=paste("mutataions_db_",batch_n,".json", sep="",collapse = "")
 write(jsonlite::toJSON(mutations_database, pretty=T), file = db_json_name)
 
