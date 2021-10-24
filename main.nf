@@ -157,6 +157,7 @@ process GenerateSample2MutationsDBlineagesUpdate{
     
     output:
     path "*.json", emit: json_database_file
+    path "*.Rdata", emit: Rdata_database_file
 
     
     script:
