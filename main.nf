@@ -184,7 +184,7 @@ process GenerateVCFBatchLists{
     //log.info " ${vcf_files_path_list} ..."
    
     //FileOut = file()
-    File FileOut = new File('results/vcf_list_files.txt')
+    File FileOut = new File(${baseDir}+'/results/vcf_list_files.txt')
     FileOut.withWriter{out -> vcf_files_path_list.each {out.println it}}
     //println vcf_files_path_list.getClass() 
 
