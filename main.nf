@@ -184,12 +184,12 @@ process GenerateVCFBatchLists{
     //log.info " ${vcf_files_path_list} ..."
    
     //FileOut = file()
-    File FileOut = new File(${baseDir}+'/results/vcf_list_files.txt')
+    File FileOut = new File(${params.outdir}+'/vcf_list_files.txt')
     FileOut.withWriter{out -> vcf_files_path_list.each {out.println it}}
     //println vcf_files_path_list.getClass() 
 
     """
-    ${baseDir}/bin/create_vcf_batches.R  ${baseDir}/results/vcf_list_files.txt 
+    ${baseDir}/bin/create_vcf_batches.R  ${params.outdir}/vcf_list_files.txt 
     """  
 }
 
