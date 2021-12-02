@@ -51,6 +51,14 @@ def helpMessagePipeline() {
   """
 }
 
+def checkFileExists(file_path) {
+  if (file_path){
+      f = file(file_path)
+      if ( !f.isFile() || !f.exists() ) {
+        exit 1, "File '$file_path' does not exist!"
+      }
+  }
+}
 
 if (params.help){
   helpMessagePipeline()
@@ -96,7 +104,7 @@ process GetVCFSample{
     //stdout emit: messages
     
     script:
-    //log.info "Get mutations for batch  ${file_batch_ids} ${GISAID_fasta_file} ${reference_fasta} ..."
+    //log.info "Get mutations for batch   ${baseDir}/bin/get_mutations_vcf.sh ${file_batch_ids} ${GISAID_fasta_file} ${reference_fasta} ..."
     """
     # echo -n $file_batch_ids
      ${baseDir}/bin/get_mutations_vcf.sh ${file_batch_ids} ${GISAID_fasta_file} ${reference_fasta}
@@ -219,15 +227,19 @@ process PerformAnalysisGenerateReport{
 
 }
 workflow {
-
+   checkFileExists(params.GISAIDMetaDataFile)
+   checkFileExists(params.GISAIDdatabase)
+   
    if (params.dbupdate_create){
+   checkFileExists(params.reference_fasta)
+   
    CreateSampleBatches("${params.GISAIDMetaDataFile}", "${params.GISAIDdatabase}")
    //CreateSampleBatches.out.messages.view()
    
 
    //log.info "Obtaining mutations for each sample batch ..."
    //channel.fromPath("results/.sample_batches/*.txt").view()
-   GetVCFSample(CreateSampleBatches.out.outfiles.flatMap(), "${params.GISAID_fasta_file}", "${baseDir}/${params.reference_fasta}")
+   GetVCFSample(CreateSampleBatches.out.outfiles.flatMap(), "${params.GISAID_fasta_file}", "${params.reference_fasta}")
   
    GenerateVCFBatchLists(GetVCFSample.out.vcf_files.collect())
    //GenerateVCFBatchLists(channel.fromPath("results/vcf_files/*.vcf").take(1000).toList()) // TEST CODE

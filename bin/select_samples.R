@@ -38,6 +38,7 @@ GISAIDmetadata=read.csv2(file=GISAIDmetadatafilein, check.names = F, sep="\t", a
 #headers_fasta = read.csv2(file="/home/CSCScience.ca/kbessono/SARS-COV-2/Shared_Data/GISAID/25-08-2021/msa_0822_headers.txt",
 #                           stringsAsFactors = F, as.is = T,colClasses = "character")[,1]
 headers_fasta=paste(GISAIDmetadata[,"Virus name"],"|",GISAIDmetadata[,"Accession ID"],sep="")
+accessions=GISAIDmetadata[,"Accession ID"]
 #accessions=unlist(str_extract_all(headers_fasta[1:10],"EPI_\\w+_\\d+"))
 
 #If database is provided, only missing samples will be analyzed for DB update
@@ -45,9 +46,9 @@ headers_fasta=paste(GISAIDmetadata[,"Virus name"],"|",GISAIDmetadata[,"Accession
 if(is.na(mutations_database_path) == FALSE){
     cat("Identifying missing accession numbers from the current mutations database\n")
     mutations_database=jsonlite::fromJSON(mutations_database_path)
-    accessions=GISAIDmetadata[,"Accession ID"]
     idx_not_analyzed = which(!accessions %in% names(mutations_database))
-    headers_fasta=headers_fasta[idx_not_analyzed]
+    #headers_fasta=headers_fasta[idx_not_analyzed]
+    accessions=accessions[idx_not_analyzed]
 }
 
 #accessions = unlist(lapply(str_split(headers_fasta,"\\|"),function(x){x[2]}))
@@ -69,11 +70,11 @@ length(headers_fasta)
 cat("Ranges ", length(ranges_list),"\n")
 
 for (batch_n in 1:length(ranges_list)){
-    headers_out = headers_fasta[ranges_list[[batch_n]][1]:ranges_list[[batch_n]][2]]
+    #headers_out = headers_fasta[ranges_list[[batch_n]][1]:ranges_list[[batch_n]][2]]
 
     #hearders_out = headers_fasta[idx] #if extracting specific lineage
     #"/Drives/W/Projects/Project_Enterics_Wastewater/Shared_Data/MIA_mk/msa_0104"
     #"/Drives/W/Projects/Project_Enterics_Wastewater/Shared_Data/GISAID/29-06-2021/samples2extact_batch"
-    write.table(headers_out , file=paste("samples2extact_batch",batch_n,".txt",sep=""), 
+    write.table(accessions , file=paste("samples2extact_batch",batch_n,".txt",sep=""), 
                 quote=F, col.names = F, row.names = F)
 }

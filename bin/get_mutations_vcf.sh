@@ -11,6 +11,7 @@ reference_fasta=$3
 batch_number=$(echo $1 | grep -o "batch[0-9]\+")
 out_name_suffix="_${batch_number}"
 
+echo "grep -w -A 1 -Ff  $samples2extract_file  $infasta_path --no-group-separator > extracted_fastas_subset${out_name_suffix}.fasta"
 grep -w -A 1 -Ff  $samples2extract_file  $infasta_path --no-group-separator > extracted_fastas_subset${out_name_suffix}.fasta
 
 echo "$1 $2 $3"
